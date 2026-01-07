@@ -3,13 +3,13 @@ import os
 
 # 디렉토리 설정
 BASE_PATH = r"C:\minwoin\miniproject\mini1"
-STONE_PATH = r"C:\minwoin\miniproject\background\stone.png"
-GROUND_PATH = r"C:\minwoin\miniproject\background\ground.png"
-SHOE_PATH = r"C:\minwoin\miniproject\item\shoes.png"
-WALL_PATH = r"C:\minwoin\miniproject\item\wall.png"
-SPRING_PATH = r"C:\minwoin\miniproject\item\spring.png"
-STOP_PATH = r"C:\minwoin\miniproject\item/stop.png"
-GUN_PATH = r"C:\minwoin\miniproject\item\gun.png"
+STONE_PATH = r"C:\minwoin\miniproject\mini1\background\stone.png"
+GROUND_PATH = r"C:\minwoin\miniproject\mini1\background\ground.png"
+SHOE_PATH = r"C:\minwoin\miniproject\mini1\item\shoes.png"
+WALL_PATH = r"C:\minwoin\miniproject\mini1\item\wall.png"
+SPRING_PATH = r"C:\minwoin\miniproject\mini1\item\spring.png"
+STOP_PATH = r"C:\minwoin\miniproject\mini1\item/stop.png"
+GUN_PATH = r"C:\minwoin\miniproject\mini1\item\gun.png"
 BULLET_PATH = r""
 
 # --- 화면 및 공간 분리 설정 ---
