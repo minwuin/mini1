@@ -52,6 +52,7 @@ def main():
     enemies = []
     items = []
     maze = []
+    bullets = []
     start_time = 0
     next_spawn = 0
     p_ticks = 0
@@ -80,10 +81,8 @@ def main():
                         player.inventory['shoes'] -= 1; player.shoes_until = curr_time + 10
                     elif event.key == pygame.K_2 and player.inventory['gun'] > 0:
                         player.inventory['gun'] -= 1
-                        for e in enemies[:]:
-                            if (player.last_dir[0] != 0 and e.pos[1] == player.pos[1] and (e.pos[0]-player.pos[0])*player.last_dir[0] > 0) or \
-                               (player.last_dir[1] != 0 and e.pos[0] == player.pos[0] and (e.pos[1]-player.pos[1])*player.last_dir[1] > 0):
-                                enemies.remove(e); break
+                        bullets.append(Bullet(player.pos, player.last_dir))
+
                     elif event.key == pygame.K_3 and player.inventory['spring'] > 0:
                         player.inventory['spring'] -= 1
                         np = [player.pos[0] + player.last_dir[0]*2, player.pos[1] + player.last_dir[1]*2]
@@ -125,19 +124,20 @@ def main():
             player = Player((ROWS-1, 0), BLUE)
             enemies = [Enemy((0, COLS-1), RED, 12)]
             items = []
+            bullets = []
             start_time = curr_time
-            next_spawn = curr_time + random.randint(20, 40)
+            next_spawn = curr_time + random.randint(5, 10)
             state = "PLAYING"
 
         elif state == "PLAYING":
             survival_time = int(curr_time - start_time)
             # 난이도 및 스폰 로직 (기존과 동일)
-            current_delay = max(4, 12 - (survival_time // 10))
+            current_delay = max(100000, 12 - (survival_time // 10))
             if len(enemies) < (survival_time // 30) + 1:
                 enemies.append(Enemy((0, COLS-1), RED, current_delay))
             for e in enemies: e.speed_delay = current_delay
 
-            if curr_time >= next_spawn and len(items) < 2:
+            if curr_time >= next_spawn and len(items) < 10:
                 itype = random.choice(ITEM_LIST)
                 while True:
                     p = (random.randint(0, ROWS-1), random.randint(0, COLS-1))
@@ -148,7 +148,7 @@ def main():
                         elif itype == 'hourglass': items.append(Hourglass(p))
                         elif itype == 'brick': items.append(Brick(p))
                         break
-                next_spawn = curr_time + random.randint(20, 40)
+                next_spawn = curr_time + random.randint(2, 3)
 
             keys = pygame.key.get_pressed()
             move_speed = 3 if curr_time < player.shoes_until else player.speed_delay
@@ -200,6 +200,26 @@ def main():
                     player.inventory[it.itype] += 1
                     items.remove(it)
 
+            for b in bullets[:]:
+                b.update()
+                
+                # 1. 화면 밖이나 벽에 부딪혔는지 확인
+                if not (0 <= b.r < ROWS and 0 <= b.c < COLS) or maze[int(b.r)][int(b.c)] == 1:
+                    bullets.remove(b)
+                    continue
+                
+                # 2. 적과 충돌했는지 확인
+                hit_enemy = False
+                for e in enemies[:]:
+                    # 적과 총알의 거리가 가까우면(0.5칸 이내) 명중으로 처리
+                    if abs(b.r - e.pos[0]) < 0.8 and abs(b.c - e.pos[1]) < 0.8:
+                        enemies.remove(e)
+                        hit_enemy = True
+                        break # 총알 하나당 적 하나만 제거
+                
+                if hit_enemy:
+                    bullets.remove(b)
+
             # 적 AI 및 충돌 (기존과 동일)
             for e in enemies:
                 if curr_time < e.frozen_until: continue
@@ -229,6 +249,11 @@ def main():
                     screen.blit(field_item_imgs[it.itype], (it.pos[1]*GRID_SIZE+2, it.pos[0]*GRID_SIZE+2))
                 else:
                     it.draw(screen)
+
+            for b in bullets:
+                b.draw(screen)
+
+            player.draw(screen)
 
             player.draw(screen)
             for e in enemies: e.draw(screen)

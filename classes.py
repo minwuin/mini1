@@ -30,6 +30,7 @@ class Enemy(Entity):
         self.speed_delay = speed_delay
         self.ticks = 0
         self.frozen_until = 0
+        self.role = "CHASER"
 
 # --- 아이템 상속 구조 ---
 class Item:
@@ -59,3 +60,24 @@ class Node:
         self.parent = parent
         self.g = self.h = self.f = 0
     def __lt__(self, other): return self.f < other.f
+
+class Bullet:
+    def __init__(self, pos, direction):
+        # pos는 (행, 열) 튜플
+        self.r = float(pos[0]) 
+        self.c = float(pos[1])
+        self.dr = direction[0]
+        self.dc = direction[1]
+        self.speed = 0.8  # 총알 속도 (한 프레임당 0.8칸 이동)
+        self.active = True
+
+    def update(self):
+        self.r += self.dr * self.speed
+        self.c += self.dc * self.speed
+
+    def draw(self, screen):
+        from constants import GRID_SIZE, GOLD
+        # 좌표를 픽셀로 변환하여 그리기
+        x = int(self.c * GRID_SIZE + GRID_SIZE // 2)
+        y = int(self.r * GRID_SIZE + GRID_SIZE // 2)
+        pygame.draw.circle(screen, GOLD, (x, y), 5) # 노란색 작은 원
