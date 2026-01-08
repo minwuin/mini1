@@ -32,8 +32,8 @@ def create_maze():
             if 0<=nr<ROWS and 0<=nc<COLS and maze[nr][nc]==1:
                 maze[r+dr][c+dc]=0; walk(nr, nc)
     walk(0,0)
-    for _ in range(140): maze[random.randint(1, ROWS-2)][random.randint(1, COLS-2)] = 0
-    for _ in range(10):
+    for _ in range(200): maze[random.randint(1, ROWS-2)][random.randint(1, COLS-2)] = 0
+    for _ in range(18):
         rr, rc = random.randint(1, ROWS-4), random.randint(1, COLS-4)
         for i in range(3):
             for j in range(3): maze[rr+i][rc+j] = 0
