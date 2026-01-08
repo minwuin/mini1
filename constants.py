@@ -1,6 +1,5 @@
 import pygame
 import os
-
 # 디렉토리 설정
 BASE_PATH = r"C:\minwoin\miniproject\mini1"
 STONE_PATH = r"C:\minwoin\miniproject\mini1\background\stone.png"

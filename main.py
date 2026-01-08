@@ -98,8 +98,12 @@ def main():
 
             elif state == "GAMEOVER":
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    close_btn = pygame.Rect(WIDTH//2-70, 550, 140, 50)
-                    if close_btn.collidepoint(event.pos): state = "START"; user_name = ""
+                    retry_btn = pygame.Rect(WIDTH//2 - 150, 550, 140, 50)
+                    quit_btn = pygame.Rect(WIDTH//2 + 10, 550, 140, 50)
+                    if retry_btn.collidepoint(event.pos): state = "START"; user_name = ""
+                    if quit_btn.collidepoint(event.pos):
+                        pygame.quit()  # 파이게임 창 닫기
+                        sys.exit()     # 파이썬 프로그램 종료
 
         if state == "START":
 
@@ -262,17 +266,25 @@ def main():
             # 랭킹 UI (기존과 동일)
             over_txt = big_font.render("GAME OVER", True, RED)
             screen.blit(over_txt, (WIDTH//2-over_txt.get_width()//2, 100))
+
             y_off = 250
             rank_h = font.render("--- TOP 5 RANKING ---", True, GOLD)
             screen.blit(rank_h, (WIDTH//2-rank_h.get_width()//2, y_off))
+
             for i, r in enumerate(rank_data):
                 txt = font.render(f"{i+1}. {r[0]} : {r[1]}s", True, WHITE)
                 screen.blit(txt, (WIDTH//2-txt.get_width()//2, y_off + 40 + i*35))
-            close_btn = pygame.Rect(WIDTH//2-70, 550, 140, 50)
-            pygame.draw.rect(screen, RED, close_btn)
-            c_txt = font.render("CLOSE", True, WHITE)
-            screen.blit(c_txt, (close_btn.centerx-c_txt.get_width()//2, close_btn.centery-c_txt.get_height()//2))
 
+            retry_btn = pygame.Rect(WIDTH//2-150, 550, 140, 50)
+            pygame.draw.rect(screen, RED, retry_btn)
+            c_txt = font.render("RETRY", True, WHITE)
+            screen.blit(c_txt, (retry_btn.centerx-c_txt.get_width()//2, retry_btn.centery-c_txt.get_height()//2))
+
+            quit_btn = pygame.Rect(WIDTH//2 + 10, 550, 140, 50)
+            pygame.draw.rect(screen, RED, quit_btn)
+            q_txt = font.render("QUIT", True, WHITE)
+            screen.blit(q_txt, (quit_btn.centerx - q_txt.get_width()//2, quit_btn.centery - q_txt.get_height()//2))
+        
         pygame.display.flip()
         clock.tick(FPS)
 
