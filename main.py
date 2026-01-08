@@ -69,7 +69,7 @@ def main():
                     elif event.key == pygame.K_RETURN and user_name: state = "PLAYING_INIT"
                     elif len(user_name) < 10: user_name += event.unicode
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    start_btn = pygame.Rect(WIDTH//2-100, 500, 200, 60)
+                    start_btn = pygame.Rect(WIDTH//2-100, 650, 200, 60)
                     if start_btn.collidepoint(event.pos) and user_name: state = "PLAYING_INIT"
 
             elif state == "PLAYING":
@@ -103,11 +103,11 @@ def main():
         if state == "START":
             screen.fill(BLACK)
             title = big_font.render("MAZE RUNNER", True, GOLD)
-            screen.blit(title, (WIDTH//2 - title.get_width()//2, 150))
-            pygame.draw.rect(screen, WHITE, (WIDTH//2-150, 400, 300, 50), 2)
-            name_label = font.render(f"NAME: {user_name}", True, WHITE)
-            screen.blit(name_label, (WIDTH//2-140, 410))
-            start_btn = pygame.Rect(WIDTH//2-100, 500, 200, 60)
+            screen.blit(title, (WIDTH//2 - title.get_width()//2, 160))
+            pygame.draw.rect(screen, WHITE, (WIDTH//2-150, 580, 300, 50), 2)
+            name_label = font.render(f"NAME : {user_name}", True, WHITE)
+            screen.blit(name_label, (WIDTH//2-130, 585))
+            start_btn = pygame.Rect(WIDTH//2-100, 650, 200, 60)
             pygame.draw.rect(screen, BLUE, start_btn)
             btn_txt = font.render("START", True, WHITE)
             screen.blit(btn_txt, (start_btn.centerx-btn_txt.get_width()//2, start_btn.centery-btn_txt.get_height()//2))
@@ -142,18 +142,49 @@ def main():
                         break
                 next_spawn = curr_time + random.randint(20, 40)
 
-            # 플레이어 이동 처리
             keys = pygame.key.get_pressed()
             move_speed = 3 if curr_time < player.shoes_until else player.speed_delay
             p_ticks += 1
+
             if p_ticks >= move_speed:
-                new_p = list(player.pos); moved = False
-                if keys[pygame.K_w]: new_p[0]-=1; player.last_dir=(-1,0); moved=True
-                elif keys[pygame.K_s]: new_p[0]+=1; player.last_dir=(1,0); moved=True
-                elif keys[pygame.K_a]: new_p[1]-=1; player.last_dir=(0,-1); moved=True
-                elif keys[pygame.K_d]: new_p[1]+=1; player.last_dir=(0,1); moved=True
-                if moved and 0<=new_p[0]<ROWS and 0<=new_p[1]<COLS and maze[new_p[0]][new_p[1]] == 0:
-                    player.pos = new_p; p_ticks = 0
+                dr, dc = 0, 0
+                
+                # 1. 우선순위 입력 감지 (상하좌우 순서는 취향이나, 보통 W/S/A/D)
+                if keys[pygame.K_w]: dr, dc = -1, 0
+                elif keys[pygame.K_s]: dr, dc = 1, 0
+                elif keys[pygame.K_a]: dr, dc = 0, -1
+                elif keys[pygame.K_d]: dr, dc = 0, 1
+
+                # 2. 이동 로직 및 벽타기(Sliding) 처리
+                if dr != 0 or dc != 0:
+                    nr, nc = player.pos[0] + dr, player.pos[1] + dc
+                    
+                    # 2-1. 원래 가려던 방향이 뚫려있는지 체크
+                    if 0 <= nr < ROWS and 0 <= nc < COLS and maze[nr][nc] == 0:
+                        player.pos = [nr, nc]
+                        player.last_dir = (dr, dc)
+                    else:
+                        # 2-2. [핵심] 막혔다면, 현재 눌린 '다른 축'의 키를 체크하여 미끄러짐 구현
+                        # dr(상하) 시도였다면 -> 좌우(A/D) 체크
+                        # dc(좌우) 시도였다면 -> 상하(W/S) 체크
+                        
+                        slide_dr, slide_dc = 0, 0 # 미끄러질 방향
+                        
+                        if dr != 0: # 상하로 가려다 막힘 -> 좌우 체크
+                            if keys[pygame.K_a]: slide_dr, slide_dc = 0, -1
+                            elif keys[pygame.K_d]: slide_dr, slide_dc = 0, 1
+                        elif dc != 0: # 좌우로 가려다 막힘 -> 상하 체크
+                            if keys[pygame.K_w]: slide_dr, slide_dc = -1, 0
+                            elif keys[pygame.K_s]: slide_dr, slide_dc = 1, 0
+                        
+                        # 미끄러질 방향이 정해졌다면 이동 시도
+                        if slide_dr != 0 or slide_dc != 0:
+                            nr, nc = player.pos[0] + slide_dr, player.pos[1] + slide_dc
+                            if 0 <= nr < ROWS and 0 <= nc < COLS and maze[nr][nc] == 0:
+                                player.pos = [nr, nc]
+                                player.last_dir = (slide_dr, slide_dc)
+                
+                p_ticks = 0 # 이동 했든 못했든 틱 초기화 (입력 반응 속도 유지)
 
             # 아이템 획득
             for it in items[:]:
@@ -219,7 +250,7 @@ def main():
                 count_txt = font.render(f"x{player.inventory[itype]}", True, WHITE)
                 screen.blit(count_txt, (slot_rect.right - count_txt.get_width() - 5, slot_rect.bottom - count_txt.get_height()))
 
-            info_txt = font.render(f"TIME: {survival_time}s  LV: {len(enemies)}", True, WHITE)
+            info_txt = font.render(f"TIME: {survival_time}s  Enemies: {len(enemies)}", True, WHITE)
             screen.blit(info_txt, (20, 20))
 
         elif state == "GAMEOVER":
