@@ -130,12 +130,22 @@ def main():
             state = "PLAYING"
 
         elif state == "PLAYING":
+
             survival_time = int(curr_time - start_time)
-            # 난이도 및 스폰 로직 (기존과 동일)
-            current_delay = max(100000, 12 - (survival_time // 10))
-            if len(enemies) < (survival_time // 30) + 1:
-                enemies.append(Enemy((0, COLS-1), RED, current_delay))
-            for e in enemies: e.speed_delay = current_delay
+            current_delay = max(4, 12 - (survival_time // 10)) 
+        
+            if len(enemies) < (survival_time // 10) + 1:
+                try:
+                 spawn_pos = get_safe_pos(maze)
+                except:
+                    spawn_pos = (0, COLS - 1) # fallback
+
+                if abs(spawn_pos[0] - player.pos[0]) + abs(spawn_pos[1] - player.pos[1]) > 10:
+                    enemies.append(Enemy(spawn_pos, RED, current_delay))
+        
+            for e in enemies:
+                e.speed_delay = current_delay
+
 
             if curr_time >= next_spawn and len(items) < 10:
                 itype = random.choice(ITEM_LIST)
@@ -153,6 +163,8 @@ def main():
             keys = pygame.key.get_pressed()
             move_speed = 3 if curr_time < player.shoes_until else player.speed_delay
             p_ticks += 1
+
+            temp_prev_pos = list(player.pos)
 
             if p_ticks >= move_speed:
                 dr, dc = 0, 0
@@ -194,6 +206,9 @@ def main():
                 
                 p_ticks = 0 # 이동 했든 못했든 틱 초기화 (입력 반응 속도 유지)
 
+            if player.pos != temp_prev_pos:
+                prev_player_pos = temp_prev_pos
+
             # 아이템 획득
             for it in items[:]:
                 if tuple(it.pos) == tuple(player.pos):
@@ -221,13 +236,65 @@ def main():
                     bullets.remove(b)
 
             # 적 AI 및 충돌 (기존과 동일)
+            sorted_e = sorted(enemies, key=lambda e: abs(e.pos[0] - player.pos[0]) + abs(e.pos[1] - player.pos[1]))
+            min_dist = abs(sorted_e[0].pos[0] - player.pos[0]) + abs(sorted_e[0].pos[1] - player.pos[1]) if sorted_e else 999
+            is_full_pursuit = (min_dist <= 5)
+
+        # 2. 적별 역할 부여 (임시 속성 사용)
+            for rank, e in enumerate(sorted_e):
+                e.rank_idx = rank # 정렬 순위 저장
+            
             for e in enemies:
-                if curr_time < e.frozen_until: continue
+                if curr_time < e.frozen_until:
+                    continue
+            
                 e.ticks += 1
                 if e.ticks >= e.speed_delay:
-                    path = a_star(maze, tuple(e.pos), tuple(player.pos))
-                    if path and len(path) > 1: e.pos = list(path[1])
+                    # 다른 적들의 위치 (충돌 방지용)
+                    others = [oe.pos for oe in enemies if oe != e]
+                    
+                    # 역할에 따른 타겟 설정
+                    role_idx = getattr(e, 'rank_idx', 0) % 3 # 안전하게 getattr 사용
+                    target = player.pos # 기본값
+
+                    if is_full_pursuit or role_idx == 0:
+                        e.color = RED # 추격
+                        target = player.pos
+                    elif role_idx == 1:
+                        e.color = (255, 255, 0) # 매복 (노랑)
+                        # utils.py에 get_intercept_pos가 있어야 함
+                        try:
+                            target = get_intercept_pos(maze, player.pos, prev_player_pos, offset=3)
+                        except:
+                            target = player.pos
+                    else:
+                        e.color = (128, 0, 128) # 지원 (보라)
+                        try:
+                            target = get_intercept_pos(maze, player.pos, prev_player_pos, offset=5)
+                        except:
+                            target = player.pos
+
+                    # A* 이동 (utils.py의 a_star가 4번째 인자 others를 받도록 수정되어 있어야 함)
+                    try:
+                        path = a_star(maze, tuple(e.pos), tuple(target), others)
+                    except TypeError: 
+                        # 만약 utils.py를 수정 못해서 인자 3개만 받는 경우 대비
+                        path = a_star(maze, tuple(e.pos), tuple(target))
+                    
+                    if path and len(path) > 1: 
+                        e.pos = list(path[1])
+                    else:
+                        # 타겟으로 못 가면 플레이어에게 직접 추격 시도
+                        try:
+                            p_alt = a_star(maze, tuple(e.pos), tuple(player.pos), others)
+                        except:
+                            p_alt = a_star(maze, tuple(e.pos), tuple(player.pos))
+                        
+                        if p_alt and len(p_alt) > 1:
+                            e.pos = list(p_alt[1])
+
                     e.ticks = 0
+                
                 if e.pos == player.pos:
                     rank_data = save_ranking(user_name, survival_time)
                     state = "GAMEOVER"
