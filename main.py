@@ -20,7 +20,8 @@ def main():
         # 1. 배경 및 벽 로드 (constants.py의 변수명 사용)
         ground_img = pygame.transform.scale(pygame.image.load(GROUND_PATH), (WIDTH, GAME_WORLD_HEIGHT))
         stone_img = pygame.transform.scale(pygame.image.load(STONE_PATH), (GRID_SIZE, GRID_SIZE))
-        
+        start_img = pygame.transform.scale(pygame.image.load(START_PATH), (WIDTH, HEIGHT))
+
         # 2. 아이템별 경로 매핑 (constants.py 설정 기반)
         path_map = {
             'shoes': SHOE_PATH,
@@ -101,7 +102,10 @@ def main():
                     if close_btn.collidepoint(event.pos): state = "START"; user_name = ""
 
         if state == "START":
-            screen.fill(BLACK)
+
+            screen.blit(start_img, (0, 0))
+
+                
             title = big_font.render("MAZE RUNNER", True, GOLD)
             screen.blit(title, (WIDTH//2 - title.get_width()//2, 160))
             pygame.draw.rect(screen, WHITE, (WIDTH//2-150, 580, 300, 50), 2)

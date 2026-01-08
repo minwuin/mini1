@@ -10,6 +10,7 @@ WALL_PATH = r"C:\minwoin\miniproject\mini1\item\wall.png"
 SPRING_PATH = r"C:\minwoin\miniproject\mini1\item\spring.png"
 STOP_PATH = r"C:\minwoin\miniproject\mini1\item/stop.png"
 GUN_PATH = r"C:\minwoin\miniproject\mini1\item\gun.png"
+START_PATH = r"C:\minwoin\miniproject\mini1\background\start.png"
 BULLET_PATH = r""
 
 # --- 화면 및 공간 분리 설정 ---
