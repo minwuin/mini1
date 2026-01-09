@@ -14,7 +14,13 @@ SPRING_PATH = r"C:\minwoin\miniproject\mini1\item\spring.png"
 STOP_PATH = r"C:\minwoin\miniproject\mini1\item/stop.png"
 GUN_PATH = r"C:\minwoin\miniproject\mini1\item\gun.png"
 START_PATH = r"C:\minwoin\miniproject\mini1\background\start.png"
-BULLET_PATH = r""
+FROZEN_ENEMY_PATH = r"C:\minwoin\miniproject\mini1\enemy\frozen.png"
+BULLET_PATH = r"C:\minwoin\miniproject\mini1\item\bullet.png"
+
+PLAYER_PATH = r"C:\minwoin\miniproject\mini1\enemy\player.png"
+ENEMY_1_PATH = r"C:\minwoin\miniproject\mini1\enemy\A.png" # 빨강 (추격)
+ENEMY_2_PATH = r"C:\minwoin\miniproject\mini1\enemy\C.png" # 노랑 (매복)
+ENEMY_3_PATH = r"C:\minwoin\miniproject\mini1\enemy\B.png"
 
 # --- 화면 및 공간 분리 설정 ---
 WIDTH = 800

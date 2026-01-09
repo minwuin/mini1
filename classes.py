@@ -24,6 +24,16 @@ class Player(Entity):
         self.last_dir = (-1, 0)
         self.shoes_until = 0
 
+    def draw(self, screen, img=None):
+        from constants import GRID_SIZE
+        
+        # 이미지가 있으면 이미지 그리기
+        if img:
+            screen.blit(img, (self.pos[1]*GRID_SIZE + 1, self.pos[0]*GRID_SIZE + 1))
+        # 없으면 원래대로 파란 네모 (부모 draw 호출)
+        else:
+            super().draw(screen)
+
 class Enemy(Entity):
     def __init__(self, pos, color, speed_delay):
         super().__init__(pos, color)
@@ -31,6 +41,24 @@ class Enemy(Entity):
         self.ticks = 0
         self.frozen_until = 0
         self.role = "CHASER"
+    # frozen_img(이미지)와 curr_time(현재 시간)을 인자로 받아야 판단할 수 있습니다.
+    def draw(self, screen, frozen_img=None,normal_img=None, curr_time=0):
+        from constants import GRID_SIZE
+        
+        # 1. 현재 얼어있는 상태인지 확인 (현재 시간이 해동 시간보다 이전이면 얼은 상태)
+        is_frozen = curr_time < self.frozen_until
+        
+        # 2. 얼어있고, 그릴 이미지가 있다면 -> 얼음 이미지 그리기
+        if is_frozen and frozen_img:
+             screen.blit(frozen_img, (self.pos[1]*GRID_SIZE + 2, self.pos[0]*GRID_SIZE + 2))
+             
+        elif normal_img:
+             screen.blit(normal_img, (self.pos[1]*GRID_SIZE + 2, self.pos[0]*GRID_SIZE + 2))
+        
+        # 3. 얼지 않았거나 이미지가 없다면 -> 원래대로 색깔 네모 그리기
+        else:
+            # 부모(Entity)의 draw 메서드를 호출해서 원래대로 그립니다.
+            super().draw(screen)
 
 # --- 아이템 상속 구조 ---
 class Item:
@@ -75,9 +103,19 @@ class Bullet:
         self.r += self.dr * self.speed
         self.c += self.dc * self.speed
 
-    def draw(self, screen):
+    def draw(self, screen, img=None):
         from constants import GRID_SIZE, GOLD
-        # 좌표를 픽셀로 변환하여 그리기
-        x = int(self.c * GRID_SIZE + GRID_SIZE // 2)
-        y = int(self.r * GRID_SIZE + GRID_SIZE // 2)
-        pygame.draw.circle(screen, GOLD, (x, y), 5) # 노란색 작은 원
+        
+        # 총알의 중심 좌표 계산 (픽셀 단위)
+        center_x = int(self.c * GRID_SIZE + GRID_SIZE // 2)
+        center_y = int(self.r * GRID_SIZE + GRID_SIZE // 2)
+
+        # 1. 이미지가 있으면 이미지 그리기
+        if img:
+            # 이미지의 중심을 계산된 좌표에 맞춤
+            rect = img.get_rect(center=(center_x, center_y))
+            screen.blit(img, rect)
+            
+        # 2. 이미지가 없으면 기존처럼 노란 원 그리기
+        else:
+            pygame.draw.circle(screen, GOLD, (center_x, center_y), 5)
