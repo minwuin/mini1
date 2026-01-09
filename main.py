@@ -5,6 +5,8 @@ from utils import a_star, create_maze, save_ranking
 
 def main():
     pygame.init()
+    pygame.mixer.init()
+    
     os.environ['SDL_VIDEO_CENTERED'] = '1'
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("MAZE RUNNER")
@@ -27,6 +29,16 @@ def main():
     enemy_imgs = [] # 적 이미지 3개를 담을 리스트
 
     try:
+        # 1. 아이템 효과음 로드 (mp3)
+        if os.path.exists(ITEM_SFX_PATH):
+            item_sfx = pygame.mixer.Sound(ITEM_SFX_PATH)
+            item_sfx.set_volume(0.7) # 소리가 너무 크면 0.1~1.0 사이로 조절하세요
+            
+        # 2. 게임오버 효과음 로드
+        if os.path.exists(GAMEOVER_SFX_PATH):
+            gameover_sfx = pygame.mixer.Sound(GAMEOVER_SFX_PATH)
+            gameover_sfx.set_volume(1.0)
+
         # 1. 배경 및 벽 로드 (constants.py의 변수명 사용)
         ground_img = pygame.transform.scale(pygame.image.load(GROUND_PATH), (WIDTH, GAME_WORLD_HEIGHT))
         stone_img = pygame.transform.scale(pygame.image.load(STONE_PATH), (GRID_SIZE, GRID_SIZE))
@@ -83,6 +95,9 @@ def main():
     pause_start = 0
     start_time = 0
     countdown_start = 0
+    if os.path.exists(LOBBY_BGM_PATH):
+        pygame.mixer.music.load(LOBBY_BGM_PATH)
+        pygame.mixer.music.play(-1) # -1은 '무한 반복'이라는 뜻입니다.
 
     while True:
         curr_time = time.time()
@@ -133,6 +148,7 @@ def main():
                     if event.key == pygame.K_ESCAPE:
                         state = "PAUSED"
                         pause_start = curr_time # 멈춘 시각 기록
+                        pygame.mixer.music.pause()
 
 
             elif state == "PAUSED":
@@ -146,6 +162,7 @@ def main():
                         player.shoes_until += offset
                         for e in enemies: e.frozen_until += offset
                         state = "PLAYING"
+                        pygame.mixer.music.unpause()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     # 버튼 영역 정의 (그리기 좌표와 동일하게 설정)
@@ -160,17 +177,28 @@ def main():
                         player.shoes_until += offset
                         for e in enemies: e.frozen_until += offset
                         state = "PLAYING"
+                        pygame.mixer.music.unpause()
 
                     # 2. 홈으로 (Home)
                     if home_btn.collidepoint(event.pos):
                         state = "START"
                         user_name = ""
+                        if os.path.exists(LOBBY_BGM_PATH):
+                            pygame.mixer.music.load(LOBBY_BGM_PATH)
+                            pygame.mixer.music.set_volume(1.0) # 볼륨 다시 원상복구 (100%)
+                            pygame.mixer.music.play(-1)
 
             elif state == "GAMEOVER":
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     retry_btn = pygame.Rect(WIDTH//2 - 150, 550, 140, 50)
                     quit_btn = pygame.Rect(WIDTH//2 + 10, 550, 140, 50)
-                    if retry_btn.collidepoint(event.pos): state = "START"; user_name = ""
+                    if retry_btn.collidepoint(event.pos): 
+                        state = "START"; user_name = ""
+
+                        if os.path.exists(LOBBY_BGM_PATH):
+                            pygame.mixer.music.load(LOBBY_BGM_PATH)
+                            pygame.mixer.music.play(-1)
+                    
                     if quit_btn.collidepoint(event.pos):
                         pygame.quit()  # 파이게임 창 닫기
                         sys.exit()     # 파이썬 프로그램 종료
@@ -223,11 +251,13 @@ def main():
             maze = create_maze()
             player = Player((ROWS-1, 0), BLUE)
             player.trail = []
-            trail_decay = []
+            trail_decay = 0
             enemies = [Enemy((0, COLS-1), RED, 12)]
             items = []
             bullets = []
+            prev_player_pos = player.pos
             countdown_start = curr_time 
+            pygame.mixer.music.stop()
             state = "COUNTDOWN"
         
         # [수정됨] COUNTDOWN과 PLAYING 상태를 하나의 블록으로 통합
@@ -241,6 +271,11 @@ def main():
                     next_spawn = curr_time + random.randint(5, 10)
                     player.shoes_until = 0
                     state = "PLAYING"
+
+                    if os.path.exists(GAME_BGM_PATH):
+                        pygame.mixer.music.load(GAME_BGM_PATH) # 게임 BGM 로드
+                        pygame.mixer.music.set_volume(0.4)
+                        pygame.mixer.music.play(-1) # 무한 반복 재생
             
             # 2. 게임 플레이 로직 (이동, 스폰, 충돌 등) -> ★ PLAYING 상태일 때만 실행 ★
             if state == "PLAYING":
@@ -356,6 +391,9 @@ def main():
                         player.inventory[it.itype] += 1
                         items.remove(it)
 
+                        if item_sfx: 
+                            item_sfx.play()
+
                 # 총알 업데이트
                 for b in bullets[:]:
                     b.update()
@@ -409,6 +447,10 @@ def main():
                     if e.pos == player.pos:
                         rank_data = save_ranking(user_name, survival_time)
                         state = "GAMEOVER"
+
+                        pygame.mixer.music.stop() # 시끄러운 배경음악 끄기
+                        if gameover_sfx: 
+                            gameover_sfx.play() # 띠로리~ 효과음 재생
 
             # --- 그리기 영역 (COUNTDOWN, PLAYING 공통) ---
             screen.fill(BLACK)

@@ -22,6 +22,13 @@ ENEMY_1_PATH = r"C:\minwoin\miniproject\mini1\enemy\A.png" # 빨강 (추격)
 ENEMY_2_PATH = r"C:\minwoin\miniproject\mini1\enemy\C.png" # 노랑 (매복)
 ENEMY_3_PATH = r"C:\minwoin\miniproject\mini1\enemy\B.png"
 
+# [소리 파일 경로]
+# mp3 파일이라고 하셔서 확장자를 .mp3로 적었습니다.
+LOBBY_BGM_PATH = r"C:\minwoin\miniproject\mini1\bgm\lobby.mp3"
+GAME_BGM_PATH = r"C:\minwoin\miniproject\mini1\bgm\game.mp3"
+ITEM_SFX_PATH = r"C:\minwoin\miniproject\mini1\bgm\item.mp3" 
+GAMEOVER_SFX_PATH = r"C:\minwoin\miniproject\mini1\bgm\gameover.mp3"
+
 # --- 화면 및 공간 분리 설정 ---
 WIDTH = 800
 HEIGHT = 900  # 전체 창 높이
