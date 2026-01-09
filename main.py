@@ -10,8 +10,14 @@ def main():
     pygame.display.set_caption("MAZE RUNNER")
     clock = pygame.time.Clock()
     
-    font = pygame.font.SysFont("malgungothic", 25, bold=True)
-    big_font = pygame.font.SysFont("malgungothic", 70, bold=True)
+    if os.path.exists(FONT_PATH):
+        font = pygame.font.Font(FONT_PATH, 25)
+        big_font = pygame.font.Font(FONT_PATH, 70)
+    else:
+        # 폰트 파일이 없으면 맑은 고딕 시도
+        print("폰트 파일을 찾을 수 없어 시스템 폰트를 사용합니다.")
+        font = pygame.font.SysFont("malgungothic", 25, bold=True)
+        big_font = pygame.font.SysFont("malgungothic", 70, bold=True)
 
     # --- 이미지 로드 섹션 ---
     item_imgs = {}
@@ -56,6 +62,7 @@ def main():
     start_time = 0
     next_spawn = 0
     p_ticks = 0
+    show_help = False
 
     while True:
         curr_time = time.time()
@@ -72,7 +79,15 @@ def main():
                     elif len(user_name) < 10: user_name += event.unicode
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     start_btn = pygame.Rect(WIDTH//2-100, 650, 200, 60)
-                    if start_btn.collidepoint(event.pos) and user_name: state = "PLAYING_INIT"
+                    if start_btn.collidepoint(event.pos):
+                        # 설명창이 열려있으면 시작 안 됨
+                        if not show_help and user_name: 
+                            state = "PLAYING_INIT"
+
+                    help_btn = pygame.Rect(WIDTH//2-100, 730, 200, 60)
+                    if help_btn.collidepoint(event.pos):
+                        show_help = not show_help # 켜져있으면 끄고, 꺼져있으면 켬
+
 
             elif state == "PLAYING":
                 if event.type == pygame.KEYDOWN:
@@ -118,6 +133,38 @@ def main():
             pygame.draw.rect(screen, BLUE, start_btn)
             btn_txt = font.render("START", True, WHITE)
             screen.blit(btn_txt, (start_btn.centerx-btn_txt.get_width()//2, start_btn.centery-btn_txt.get_height()//2))
+            
+            help_btn = pygame.Rect(WIDTH//2-100, 730, 200, 60)
+            pygame.draw.rect(screen, (50, 50, 50), help_btn) # 회색 버튼
+            help_txt = font.render("HOW TO PLAY", True, WHITE)
+            screen.blit(help_txt, (help_btn.centerx - help_txt.get_width()//2, help_btn.centery - help_txt.get_height()//2))
+            
+            if show_help:
+                # 반투명 검은 배경
+                s = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+                s.fill((0, 0, 0, 230)) 
+                screen.blit(s, (0,0))
+                
+                # 설명 문구들
+                msgs = [
+                    "--- GAME RULES ---",
+                    "",
+                    "[WASD] Move",
+                    "[1] Shoes (Speed Up)",
+                    "[2] Gun (Kill Enemy)",
+                    "[3] Spring (Jump Wall)",
+                    "[4] Hourglass (Freeze)",
+                    "[5] Brick (Build Wall)",
+                    "",
+                    "Survive as long as you can!",
+                    "(Click to Close)"
+                ]
+                
+                # 줄바꿈하며 출력
+                for i, line in enumerate(msgs):
+                    txt = font.render(line, True, WHITE)
+                    screen.blit(txt, (WIDTH//2 - txt.get_width()//2, 150 + i * 40))
+
 
         elif state == "PLAYING_INIT":
             maze = create_maze()
@@ -350,8 +397,14 @@ def main():
                 count_txt = font.render(f"x{player.inventory[itype]}", True, WHITE)
                 screen.blit(count_txt, (slot_rect.right - count_txt.get_width() - 5, slot_rect.bottom - count_txt.get_height()))
 
-            info_txt = font.render(f"TIME: {survival_time}s  Enemies: {len(enemies)}", True, WHITE)
-            screen.blit(info_txt, (20, 20))
+            time_txt = font.render(f"TIME: {survival_time}s", True, WHITE)
+            # X좌표 계산: 전체화면(WIDTH) - 글자길이 - 여백(20)
+            screen.blit(time_txt, (WIDTH - time_txt.get_width() - 20, INV_Y + 20))
+
+            # 2. 적 숫자 출력
+            enemy_txt = font.render(f"Enemies: {len(enemies)}", True, WHITE)
+            # X좌표 계산: 전체화면(WIDTH) - 글자길이 - 여백(20)
+            screen.blit(enemy_txt, (WIDTH - enemy_txt.get_width() - 20, INV_Y + 50))
 
         elif state == "GAMEOVER":
             screen.fill(BLACK)

@@ -1,5 +1,9 @@
 import pygame
 import os
+
+# 폰트 설정
+FONT_PATH = r"C:\minwoin\miniproject\mini1\DungGeunMo.ttf"
+
 # 디렉토리 설정
 BASE_PATH = r"C:\minwoin\miniproject\mini1"
 STONE_PATH = r"C:\minwoin\miniproject\mini1\background\stone.png"
