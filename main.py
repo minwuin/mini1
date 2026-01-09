@@ -479,20 +479,29 @@ def main():
                 for i, (tr, tc) in enumerate(player.trail):
                     
                     # 1. 꽉 찬 사각형 도화지 생성 (여백 없음!)
-                    ghost_surf = pygame.Surface((GRID_SIZE, GRID_SIZE), pygame.SRCALPHA)
-                    
-                    # 2. 그라데이션 효과 (플레이어에 가까울수록 진하게)
-                    # i+1을 해서 0이 안 되게 하고, 전체 개수로 나눠 비율을 구함
-                    # 최대 투명도 150 (0~255)
+# 1. 투명도 계산 (0 ~ 150 사이)
+                    # 꼬리 끝은 연하게, 플레이어 엉덩이 쪽은 진하게
                     alpha = int(150 * (i + 1) / len(player.trail))
-                    ghost_color = (BLUE[0], BLUE[1], BLUE[2], alpha)
-                    
-                    # 3. 꽉 찬 네모 그리기 (좌표 0, 0에서 시작, 크기는 GRID_SIZE 전체)
-                    # 여백을 주던 (2, 2, GRID_SIZE-4...) 코드를 제거했습니다.
-                    pygame.draw.rect(ghost_surf, ghost_color, (0, 0, GRID_SIZE, GRID_SIZE))
 
-                    # 4. 화면에 그리기
-                    screen.blit(ghost_surf, (tc * GRID_SIZE, tr * GRID_SIZE))
+                    # 2. 플레이어 이미지가 있다면 -> 이미지로 그리기
+                    if player_img:
+                        # ★ 중요: 원본 이미지를 복사(copy)해서 써야 함
+                        # 그냥 쓰면 진짜 플레이어까지 투명해집니다!
+                        ghost_img = player_img.copy()
+                        
+                        # 복사한 이미지에 투명도 적용
+                        ghost_img.set_alpha(alpha)
+                        
+                        # 화면에 그리기
+                        # 이미지는 로드할 때 (GRID_SIZE-4)로 줄였으므로, 좌표에 +2씩 더해서 중앙 정렬
+                        screen.blit(ghost_img, (tc * GRID_SIZE + 2, tr * GRID_SIZE + 2))
+
+                    # 3. 이미지가 로드 안 됐다면 -> 기존 방식(파란 네모) 사용 (오류 방지용)
+                    else:
+                        ghost_surf = pygame.Surface((GRID_SIZE, GRID_SIZE), pygame.SRCALPHA)
+                        ghost_color = (BLUE[0], BLUE[1], BLUE[2], alpha)
+                        pygame.draw.rect(ghost_surf, ghost_color, (0, 0, GRID_SIZE, GRID_SIZE))
+                        screen.blit(ghost_surf, (tc * GRID_SIZE, tr * GRID_SIZE))
 
             # [수정] 플레이어 그리기 (플레이어 이미지 전달)
             # player_img 변수가 로드되어 있어야 합니다.
